@@ -1,4 +1,4 @@
-astroid==2.3.3
+astroid
 atomicwrites==1.2.1
 attrs==18.2.0
 bintrees==2.0.7
@@ -24,8 +24,8 @@ pytest-mock==1.10.0
 python-dateutil==2.6.0
 pytz==2017.2
 PyYAML==5.1
-requests==2.20.0
-six==1.13.0
+requests
+six
 sortedcontainers==2.1.0
 TA-Lib==0.4.17
 websocket-client==0.40.0
