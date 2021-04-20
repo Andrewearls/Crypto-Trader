@@ -31,5 +31,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://cbpro:5000"
+  "proxy": "http://172.19.0.2:5000"
 }
