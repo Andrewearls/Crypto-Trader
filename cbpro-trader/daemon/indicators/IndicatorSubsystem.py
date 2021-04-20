@@ -37,6 +37,10 @@ class IndicatorSubsystem:
 
         self.current_indicators[period_name]['adx'] = adx[-1]
 
+    # Bollinger Bands
+    # Calculate the estimated price range
+    # Should cover 95% of the price range
+    # Not sure why there are two or how they are calculated
     def calculate_bbands(self, period_name, close):
         timeperiod = 20
         upperband_1, middleband_1, lowerband_1 = talib.BBANDS(close, timeperiod=timeperiod, nbdevup=1, nbdevdn=1, matype=0)

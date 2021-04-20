@@ -89,23 +89,31 @@ class TradeEngine():
         return Decimal(money).quantize(Decimal('.01'), rounding=ROUND_DOWN)
 
     def round_coin(self, money):
+        # Coin base records to the ten-quadrillionth
+        # For now round down to the hundred-millionth place value
         return Decimal(money).quantize(Decimal('.00000001'), rounding=ROUND_DOWN)
 
     def update_amounts(self):
+        # If more than one second since last update
         if time.time() - self.last_balance_update > 1.0:
             try:
                 self.last_balance_update = time.time()
                 ret = self.auth_client.get_accounts()
                 if isinstance(ret, list):
+                    # For each type of currency held
                     for account in ret:
+                        # Record the balance rounded down
                         self.balances[account['currency']] = self.round_coin(account.get('available'))
             except Exception:
                 self.error_logger.exception(datetime.datetime.now())
                 return
             self.balances['fiat_equivalent'] = Decimal('0.0')
+            # For each product being traded
             for product in self.products:
                 if not product.meta and product.order_book.get_current_ticker() and product.order_book.get_current_ticker().get('price'):
+                    # Add the projected cost of any held currencies
                     self.balances['fiat_equivalent'] += self.get_base_currency_from_product_id(product.product_id, update=False) * Decimal(product.order_book.get_current_ticker().get('price'))
+            # Then add any reserved fiat
             self.balances['fiat_equivalent'] += self.balances[self.fiat_currency]
 
     def print_amounts(self):
@@ -245,6 +253,7 @@ class TradeEngine():
         return self.balances[product_id[4:]]
 
     def determine_trades(self, product_id, period_list, indicators):
+        # Get current values of held instruments
         self.update_amounts()
 
         if self.is_live:
