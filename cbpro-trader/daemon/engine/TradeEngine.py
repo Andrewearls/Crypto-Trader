@@ -266,11 +266,25 @@ class TradeEngine():
                 new_buy_flag = new_buy_flag and Decimal(indicators[cur_period.name]['sma_trend']) > Decimal('0.0')
                 new_sell_flag = new_sell_flag or Decimal(indicators[cur_period.name]['sma_trend']) < Decimal('0.0')
 
-            if product_id == 'LTC-BTC' or product_id == 'ETH-BTC':
-                ltc_or_eth_fiat_product = self.get_product_by_product_id(product_id[:3] + '-' + self.fiat_currency)
-                btc_fiat_product = self.get_product_by_product_id('BTC-' + self.fiat_currency)
-                new_buy_flag = new_buy_flag and ltc_or_eth_fiat_product.buy_flag
-                new_sell_flag = new_sell_flag and btc_fiat_product.buy_flag
+                # High Low Prediction Strategy
+                # Calculate the BEP for buying at this price
+
+                # If the BEP is below the bband upper band
+                self.logger.debug(new_buy_flag)
+                self.logger.debug(Decimal(indicators[cur_period.name]['sma_trend']))
+                self.logger.debug(self.balances[self.fiat_currency])
+                self.logger.debug(indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]))
+                self.logger.debug(indicators[cur_period.name]['bband_upper_1'])
+                new_buy_flag = new_buy_flag and indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]) < indicators[cur_period.name]['bband_upper_1']
+                # If product is >= Last purchase BEP
+                new_sell_flag = new_sell_flag or float(self.balances[cur_period.name]) * float(indicators[cur_period.name]['close']) > indicators[cur_period.name]['sell_point'](self.recent_fills[0])
+
+
+            # if product_id == 'LTC-BTC' or product_id == 'ETH-BTC':
+            #     ltc_or_eth_fiat_product = self.get_product_by_product_id(product_id[:3] + '-' + self.fiat_currency)
+            #     btc_fiat_product = self.get_product_by_product_id('BTC-' + self.fiat_currency)
+            #     new_buy_flag = new_buy_flag and ltc_or_eth_fiat_product.buy_flag
+            #     new_sell_flag = new_sell_flag and btc_fiat_product.buy_flag
 
             if new_buy_flag:
                 if product.sell_flag:
