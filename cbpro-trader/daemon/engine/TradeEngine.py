@@ -284,8 +284,14 @@ class TradeEngine:
                 self.logger.debug(indicators[cur_period.name]['bband_upper_1'])
                 new_buy_flag = new_buy_flag and indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]) < indicators[cur_period.name]['bband_upper_1']
                 # If product is >= Last purchase BEP
-                new_sell_flag = new_sell_flag or float(self.balances[cur_period.name]) * float(indicators[cur_period.name]['close']) > indicators[cur_period.name]['sell_point'](self.recent_fills[0])
+                cur_period_balance = float(self.balances[cur_period.name])
+                cur_period_price = cur_period_balance * float(indicators[cur_period.name]['close'])
+                # self.logger.debug(self.recent_fills[0])
+                sell_point = indicators['sell_point'](self.recent_fills)
+                cur_period_profiting = cur_period_price > sell_point
+                new_sell_flag = new_sell_flag or cur_period_profiting and not new_buy_flag
 
+                self.mc.indicator_log(indicators[cur_period.name], new_buy_flag, new_sell_flag, sell_point=sell_point)
 
             # if product_id == 'LTC-BTC' or product_id == 'ETH-BTC':
             #     ltc_or_eth_fiat_product = self.get_product_by_product_id(product_id[:3] + '-' + self.fiat_currency)

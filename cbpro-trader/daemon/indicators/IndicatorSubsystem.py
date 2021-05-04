@@ -9,6 +9,7 @@ class IndicatorSubsystem:
         self.logger = logging.getLogger('trader-logger')
         self.mc = mongo_connection
         self.current_indicators = {}
+        self.calculate_sell_point()
         self.period_list = period_list
         for period in self.period_list:
             self.current_indicators[period.name] = {}
@@ -26,6 +27,10 @@ class IndicatorSubsystem:
 
             self.current_indicators[cur_period.name]['close'] = cur_period.cur_candlestick.close
             self.current_indicators[cur_period.name]['total_periods'] = total_periods
+
+            self.calculate_bbands(cur_period.name, closing_prices_close)
+            self.calculate_bep(cur_period.name, closing_prices_close)
+
 
     def calculate_sma(self, period_name, closing_prices):
         sma = talib.SMA(closing_prices, timeperiod=9)
@@ -100,3 +105,39 @@ class IndicatorSubsystem:
         mfi = talib.MFI(highs, lows, closing_prices, volumes)
 
         self.current_indicators[period_name]['mfi'] = mfi[-1]
+
+    def calculate_bep(self, period_name, closing_prices):
+        def calculate(fiat_balance):
+            # This Works Don't Change it!
+            fiat_balance = float(fiat_balance)
+            # goal_profit = fiat_balance / .995
+            fiat_minus_fees = fiat_balance * .995
+            coin_amount = fiat_minus_fees / float(closing_prices[-1])
+            # trading_fee = fiat_balance * .005
+            return fiat_balance / (coin_amount * .995)
+
+        self.current_indicators[period_name]['bep'] = calculate
+
+    def calculate_sell_point(self):
+        # This works now don't change
+        def calculate(last_trades):
+            cost = 0
+            profit_margin = .995
+            coin_amount = 0
+            for trade in last_trades:
+                if trade['side'] == 'buy':
+                    # self.logger.debug(trade)
+                    volume = float(trade["usd_volume"])
+                    coin_amount += float(trade["size"])
+                    taker_fee = float(trade["fee"])
+                    cost += volume + taker_fee
+                else:
+                    break
+
+            try:
+                sell_point = cost / (coin_amount * profit_margin)
+            except ZeroDivisionError:
+                sell_point = 0
+            return sell_point
+
+        self.current_indicators['sell_point'] = calculate
