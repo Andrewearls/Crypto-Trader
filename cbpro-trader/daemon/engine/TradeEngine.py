@@ -6,8 +6,9 @@ import itertools
 from decimal import Decimal, ROUND_DOWN
 from .Product import Product
 
-class TradeEngine():
-    def __init__(self, auth_client, product_list=['BTC-USD', 'ETH-USD', 'LTC-USD'], fiat='USD', is_live=False, max_slippage=Decimal('0.10')):
+
+class TradeEngine:
+    def __init__(self, auth_client, mongo_connection, product_list=['BTC-USD', 'ETH-USD', 'LTC-USD'], fiat='USD', is_live=False, max_slippage=Decimal('0.10')):
         self.logger = logging.getLogger('trader-logger')
         self.error_logger = logging.getLogger('error-logger')
         self.mc = mongo_connection
@@ -15,7 +16,7 @@ class TradeEngine():
         self.product_list = product_list
         self.fiat_currency = fiat
         self.is_live = is_live
-        self.market_orders = True # TODO: make this a config option
+        self.market_orders = True  # TODO: make this a config option
         self.available_products = []
         self.products = []
         self.balances = {}
@@ -261,6 +262,7 @@ class TradeEngine():
         # Get current values of held instruments
         self.update_amounts()
 
+        # if trades can be made
         if self.is_live:
             product = self.get_product_by_product_id(product_id)
 
