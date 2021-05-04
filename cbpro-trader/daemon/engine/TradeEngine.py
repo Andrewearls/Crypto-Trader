@@ -10,6 +10,7 @@ class TradeEngine():
     def __init__(self, auth_client, product_list=['BTC-USD', 'ETH-USD', 'LTC-USD'], fiat='USD', is_live=False, max_slippage=Decimal('0.10')):
         self.logger = logging.getLogger('trader-logger')
         self.error_logger = logging.getLogger('error-logger')
+        self.mc = mongo_connection
         self.auth_client = auth_client
         self.product_list = product_list
         self.fiat_currency = fiat
@@ -104,6 +105,10 @@ class TradeEngine():
                     for account in ret:
                         # Record the balance rounded down
                         self.balances[account['currency']] = self.round_coin(account.get('available'))
+
+                self.mc.fills_log(self.recent_fills)
+                # self.logger.debug("logging fills")
+
             except Exception:
                 self.error_logger.exception(datetime.datetime.now())
                 return
@@ -301,6 +306,7 @@ class TradeEngine():
                         if not product.order_in_progress:
                             bid = product.order_book.get_ask() - Decimal(product.quote_increment)
                             amount = self.round_coin(Decimal(amount) / Decimal(bid))
+                            self.mc.placing_buy()
                             product.order_thread = threading.Thread(target=self.buy, name='buy_thread', kwargs={'product': product})
                             product.order_thread.start()
             elif new_sell_flag:
@@ -314,6 +320,7 @@ class TradeEngine():
                         self.auth_client.place_market_order(product.product_id, "sell", size=str(amount_of_coin))
                     else:
                         if not product.order_in_progress:
+                            self.mc.placing_sell()
                             product.order_thread = threading.Thread(target=self.sell, name='sell_thread', kwargs={'product': product})
                             product.order_thread.start()
             else:

@@ -5,8 +5,9 @@ from decimal import Decimal
 
 
 class IndicatorSubsystem:
-    def __init__(self, period_list):
+    def __init__(self, period_list, mongo_connection):
         self.logger = logging.getLogger('trader-logger')
+        self.mc = mongo_connection
         self.current_indicators = {}
         self.period_list = period_list
         for period in self.period_list:

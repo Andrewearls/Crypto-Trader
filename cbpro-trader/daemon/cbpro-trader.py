@@ -7,6 +7,7 @@
 import cbpro
 import period
 import indicators
+import storage
 import engine
 import yaml
 import queue
@@ -31,6 +32,8 @@ class CBProTrader(object):
             self.logger.addHandler(logging.StreamHandler())
         self.error_logger = logging.getLogger('error-logger')
         self.error_logger.addHandler(logging.FileHandler("error.log"))
+
+        self.mc = storage.MongoConnection(self.config['mongo'])
 
         self.initializing = False
         self.web_interface = None
@@ -86,11 +89,11 @@ class CBProTrader(object):
                     self.trade_period_list[cur_period['product']] = []
                 self.trade_period_list[cur_period['product']].append(new_period)
         max_slippage = Decimal(str(self.config['max_slippage']))
-        self.trade_engine = engine.TradeEngine(auth_client, product_list=self.product_list, fiat=fiat_currency, is_live=self.config['live'], max_slippage=max_slippage)
+        self.trade_engine = engine.TradeEngine(auth_client, product_list=self.product_list, fiat=fiat_currency, is_live=self.config['live'], max_slippage=max_slippage, mongo_connection=self.mc)
         self.cbpro_websocket = engine.TradeAndHeartbeatWebsocket(fiat=fiat_currency, sandbox=self.config['sandbox'])
         self.cbpro_websocket.start()
         self.indicator_period_list[0].verbose_heartbeat = True
-        self.indicator_subsys = indicators.IndicatorSubsystem(self.indicator_period_list)
+        self.indicator_subsys = indicators.IndicatorSubsystem(self.indicator_period_list, self.mc)
         self.last_indicator_update = time.time()
 
         self.init_interface()
