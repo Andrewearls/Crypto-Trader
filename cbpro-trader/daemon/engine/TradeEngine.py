@@ -275,13 +275,7 @@ class TradeEngine:
 
                 # High Low Prediction Strategy
                 # Calculate the BEP for buying at this price
-
                 # If the BEP is below the bband upper band
-                self.logger.debug(new_buy_flag)
-                self.logger.debug(Decimal(indicators[cur_period.name]['sma_trend']))
-                self.logger.debug(self.balances[self.fiat_currency])
-                self.logger.debug(indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]))
-                self.logger.debug(indicators[cur_period.name]['bband_upper_1'])
                 new_buy_flag = new_buy_flag and indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]) < indicators[cur_period.name]['bband_upper_1']
                 # If product is >= Last purchase BEP
                 cur_period_balance = float(self.balances[cur_period.name])
