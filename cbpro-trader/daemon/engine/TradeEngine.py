@@ -282,8 +282,8 @@ class TradeEngine:
                 market_rising = sma_trend_positive and above_market_bottom
                 market_falling = sma_trend_negative and below_market_bottom
 
-                new_buy_flag = new_buy_flag and market_rising
-                new_sell_flag = new_sell_flag or market_falling
+                new_buy_flag = new_buy_flag and above_market_bottom
+                new_sell_flag = new_sell_flag or below_market_bottom
 
                 # High Low Prediction Strategy
                 # Calculate the BEP for buying at this price
