@@ -270,20 +270,41 @@ class TradeEngine:
             new_sell_flag = False
             for cur_period in period_list:
                 # Moving Average Strategy
-                new_buy_flag = new_buy_flag and Decimal(indicators[cur_period.name]['sma_trend']) > Decimal('0.0')
-                new_sell_flag = new_sell_flag or Decimal(indicators[cur_period.name]['sma_trend']) < Decimal('0.0')
+                sma_trend_positive = Decimal(indicators[cur_period.name]['sma_trend']) > Decimal('0.0')
+                sma_trend_negative = Decimal(indicators[cur_period.name]['sma_trend']) < Decimal('0.0')
+
+                current_price = indicators[cur_period.name]['close']
+                projected_market_bottom = indicators[cur_period.name]['bband_lower_1']
+
+                below_market_bottom = current_price < projected_market_bottom
+                above_market_bottom = current_price >= projected_market_bottom
+
+                market_rising = sma_trend_positive and above_market_bottom
+                market_falling = sma_trend_negative and below_market_bottom
+
+                new_buy_flag = new_buy_flag and market_rising
+                new_sell_flag = new_sell_flag or market_falling
 
                 # High Low Prediction Strategy
                 # Calculate the BEP for buying at this price
+
                 # If the BEP is below the bband upper band
-                new_buy_flag = new_buy_flag and indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]) < indicators[cur_period.name]['bband_upper_1']
+                bep = indicators[cur_period.name]['bep'](self.balances[self.fiat_currency])
+                profit_expected = bep < indicators[cur_period.name]['bband_upper_1']
+
+                new_buy_flag = new_buy_flag and profit_expected
+
                 # If product is >= Last purchase BEP
                 cur_period_balance = float(self.balances[cur_period.name])
                 cur_period_price = cur_period_balance * float(indicators[cur_period.name]['close'])
-                # self.logger.debug(self.recent_fills[0])
+
                 sell_point = indicators['sell_point'](self.recent_fills)
-                cur_period_profiting = cur_period_price > sell_point
-                new_sell_flag = new_sell_flag or cur_period_profiting and not new_buy_flag
+                cur_period_profiting = current_price > sell_point
+
+                new_sell_flag = new_sell_flag or cur_period_profiting
+
+                # Don't sell if we would buy
+                new_sell_flag = new_sell_flag and not new_buy_flag
 
                 self.mc.indicator_log(indicators[cur_period.name], new_buy_flag, new_sell_flag, sell_point=sell_point)
 
