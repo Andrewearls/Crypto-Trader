@@ -64,19 +64,10 @@ class MongoConnection(object):
         # self.logger.debug("trying to log fills")
         data = {}
         for fill in fills:
-            data[str(fill['trade_id'])] = fill
+            if self.db.fills_log.find({'tradeId': str(fill['trade_id'])}).count() < 1:
+                fill['log_time'] = self.get_time()
+                self.db.fills_log.insert(fill, maniplulate=False)
             # self.logger.debug(fill)
-
-        if self.last_fills_entry != data:
-            # self.logger.debug(self.last_fills_entry)
-            self.last_fills_entry = data.copy()
-            # self.logger.debug(data)
-
-            data['time'] = self.get_time()
-            self.db.fills_log.insert(data, manipulate=False)
-
-        # collection = self.db.fill_log
-        # collection.insert(fill)
 
     def placing_buy(self):
         data = self.last_indicator_entry.copy()
