@@ -283,8 +283,12 @@ class TradeEngine:
                 market_rising = sma_trend_positive and above_market_bottom
                 market_falling = sma_trend_negative and below_market_bottom
 
+                last_purchase_price = float(self.recent_fills[-1]["price"])
+                incurring_losses = current_price < last_purchase_price
+                emergency_sell = below_market_bottom and incurring_losses
+
                 new_buy_flag = new_buy_flag and above_market_bottom
-                new_sell_flag = new_sell_flag or below_market_bottom
+                new_sell_flag = new_sell_flag or emergency_sell
 
                 # High Low Prediction Strategy
 
