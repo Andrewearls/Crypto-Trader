@@ -3,6 +3,7 @@ import logging
 import threading
 import datetime
 import itertools
+import math
 from decimal import Decimal, ROUND_DOWN
 from .Product import Product
 
@@ -286,11 +287,12 @@ class TradeEngine:
                 new_sell_flag = new_sell_flag or below_market_bottom
 
                 # High Low Prediction Strategy
+
                 # Calculate the BEP for buying at this price
 
                 # If the BEP is below the bband upper band
-                bep = indicators[cur_period.name]['bep'](self.balances[self.fiat_currency])
-                profit_expected = bep < indicators[cur_period.name]['bband_upper_1']
+                bep = math.ceil(indicators[cur_period.name]['bep'](self.balances[self.fiat_currency]))
+                profit_expected = bep < math.ceil(indicators[cur_period.name]['bband_upper_1'])
 
                 new_buy_flag = new_buy_flag and profit_expected
 
@@ -329,7 +331,6 @@ class TradeEngine:
                         if not product.order_in_progress:
                             bid = product.order_book.get_ask() - Decimal(product.quote_increment)
                             amount = self.round_coin(Decimal(amount) / Decimal(bid))
-                            self.mc.placing_buy()
                             product.order_thread = threading.Thread(target=self.buy, name='buy_thread', kwargs={'product': product})
                             product.order_thread.start()
             elif new_sell_flag:
@@ -343,7 +344,6 @@ class TradeEngine:
                         self.auth_client.place_market_order(product.product_id, "sell", size=str(amount_of_coin))
                     else:
                         if not product.order_in_progress:
-                            self.mc.placing_sell()
                             product.order_thread = threading.Thread(target=self.sell, name='sell_thread', kwargs={'product': product})
                             product.order_thread.start()
             else:
