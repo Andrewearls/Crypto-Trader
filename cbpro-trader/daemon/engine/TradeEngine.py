@@ -321,13 +321,13 @@ class TradeEngine:
             #     new_sell_flag = new_sell_flag and btc_fiat_product.buy_flag
 
             if new_buy_flag:
-                self.mc.placing_buy()
                 if product.sell_flag:
                     product.last_signal_switch = time.time()
                 product.sell_flag = False
                 product.buy_flag = True
                 amount = self.round_fiat(self.get_quoted_currency_from_product_id(product_id))
                 if amount >= Decimal(product.min_size):
+                    self.mc.placing_buy()
                     if self.market_orders:
                         ret = self.auth_client.place_market_order(product.product_id, "buy", funds=str(amount))
                         self.logger.debug(ret)
@@ -339,13 +339,13 @@ class TradeEngine:
                             product.order_thread = threading.Thread(target=self.buy, name='buy_thread', kwargs={'product': product})
                             product.order_thread.start()
             elif new_sell_flag:
-                self.mc.placing_sell()
                 if product.buy_flag:
                     product.last_signal_switch = time.time()
                 product.buy_flag = False
                 product.sell_flag = True
                 amount_of_coin = self.round_coin(self.get_base_currency_from_product_id(product_id))
                 if amount_of_coin >= Decimal(product.min_size):
+                    self.mc.placing_sell()
                     if self.market_orders:
                         self.auth_client.place_market_order(product.product_id, "sell", size=str(amount_of_coin))
                     else:
