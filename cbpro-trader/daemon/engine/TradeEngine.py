@@ -321,6 +321,7 @@ class TradeEngine:
             #     new_sell_flag = new_sell_flag and btc_fiat_product.buy_flag
 
             if new_buy_flag:
+                self.mc.placing_buy()
                 if product.sell_flag:
                     product.last_signal_switch = time.time()
                 product.sell_flag = False
@@ -338,6 +339,7 @@ class TradeEngine:
                             product.order_thread = threading.Thread(target=self.buy, name='buy_thread', kwargs={'product': product})
                             product.order_thread.start()
             elif new_sell_flag:
+                self.mc.placing_sell()
                 if product.buy_flag:
                     product.last_signal_switch = time.time()
                 product.buy_flag = False
